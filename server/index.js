@@ -1,4 +1,4 @@
-const { conn } = require('./db');
+const { conn, User } = require('./db');
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
@@ -10,10 +10,29 @@ app.get('/', (req, res)=> {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
+app.get('/api/users', async(req, res, next)=> {
+  try {
+    const users = await User.findAll({
+      attributes: {
+        exclude: ['password']
+      }
+    });
+    res.send(users);
+  }
+  catch(ex){
+    next(ex);
+  }
+});
+
 app.listen(port, async()=> {
   try {
     await conn.sync({ force: true });
     console.log(`listening on port ${port}`);
+    const [moe, lucy] = await Promise.all([
+      User.create({ username: 'moe', password: '123'}),
+      User.create({ username: 'lucy', password: '123'})
+    ]);
+    console.log('seeded');
   }
   catch(ex){
     console.log(ex);
